@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Galaxy Learn — Petualangan Astronaut Cilik</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700&family=Noto+Sans+Javanese&display=swap" rel="stylesheet">
+<style>
+:root{--bg1:#0b1e4f;--bg2:#1b3a8f;--card:#ffffff;--ink:#14224d;--star:#ffd23f;--cy:#22d3ee;--pu:#8b5cf6;--ok:#16a34a;--no:#e11d48}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;font-family:'Baloo 2','Nunito',system-ui,sans-serif;font-size:18px;color:#fff;background:radial-gradient(circle at 20% 10%,#2a4fc0 0,transparent 40%),linear-gradient(160deg,var(--bg1),var(--bg2));background-attachment:fixed}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;background-image:radial-gradient(2px 2px at 20px 30px,#fff,transparent),radial-gradient(2px 2px at 120px 90px,#cdeaff,transparent),radial-gradient(1.5px 1.5px at 220px 50px,#fff,transparent);background-size:260px 160px;opacity:.7}
+#app{position:relative;max-width:900px;margin:0 auto;padding:14px}
+h1,h2,h3{margin:.3em 0}
+.card{background:var(--card);color:var(--ink);border-radius:20px;padding:16px;margin:12px 0;box-shadow:0 6px 0 rgba(0,0,0,.18)}
+.btn{font:inherit;font-weight:700;font-size:1.05rem;border:0;border-radius:16px;padding:12px 18px;min-height:48px;background:var(--star);color:#3b2a00;cursor:pointer;box-shadow:0 4px 0 #c79a00}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 #c79a00}
+.btn.sec{background:var(--cy);color:#04323b;box-shadow:0 4px 0 #0e8aa0}
+.btn.ghost{background:rgba(255,255,255,.18);color:#fff;box-shadow:none}
+.btn:focus-visible,input:focus-visible{outline:4px solid var(--pu);outline-offset:2px}
+input{font:inherit;width:100%;padding:12px;border-radius:14px;border:3px solid #c7d2fe;margin:6px 0;color:var(--ink)}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.pts{background:rgba(255,255,255,.18);border-radius:999px;padding:6px 14px;font-weight:700}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.planet{border:0;border-radius:24px;padding:14px 8px;color:#fff;font:inherit;font-weight:700;cursor:pointer;text-align:center;box-shadow:0 5px 0 rgba(0,0,0,.25);transition:transform .2s}
+.planet:hover{transform:translateY(-4px) rotate(-1deg)}
+.planet .e{font-size:2.6rem;display:block;animation:fl 3s ease-in-out infinite}
+@keyframes fl{50%{transform:translateY(-6px)}}
+.hero{text-align:center;padding-top:20px}
+.hero svg{width:170px;animation:fl 3s ease-in-out infinite}
+.warn{background:#fff7d6;color:#5a4300;border-radius:14px;padding:10px 12px;font-size:.9rem;margin:10px 0}
+.opt{display:block;width:100%;text-align:left;margin:8px 0;background:#eef2ff;color:var(--ink);box-shadow:0 3px 0 #c7d2fe}
+.opt.good{background:#bbf7d0}.opt.bad{background:#fecdd3}
+.fb{border-radius:14px;padding:12px;margin-top:10px}
+.fb.ok{background:#dcfce7}.fb.no{background:#ffe4e6}
+.chip{display:inline-block;background:#e0e7ff;border-radius:999px;padding:3px 12px;margin:3px;font-size:.9rem}
+.jv{font-family:'Noto Sans Javanese',serif;font-size:2rem}
+.bar{height:12px;background:#e5e7eb;border-radius:9px;overflow:hidden}.bar i{display:block;height:100%;background:var(--ok)}
+.av{display:inline-block;font-size:2.2rem}.av.talk{animation:tk .35s infinite alternate}@keyframes tk{to{transform:scale(1.18) rotate(6deg)}}
+.tabs{display:flex;gap:6px;overflow-x:auto;padding:4px 0}.tabs .btn{flex:0 0 auto;min-height:40px;padding:6px 14px}select{font:inherit;width:100%;padding:10px;border-radius:14px;border:3px solid #c7d2fe;margin:6px 0}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+/* ===== KONFIGURASI BACKEND (Tahap 5) =====
+   Isi setelah backend dibuat. Jangan taruh service-role key di sini. */
+const BACKEND={url:"",anonKey:""}; // kosong = backend belum dikonfigurasi
+
+/* ===== DATA ===== */
+const AST=`<svg viewBox="0 0 120 140" aria-label="Astronaut"><circle cx="60" cy="48" r="38" fill="#fff"/><ellipse cx="60" cy="50" rx="27" ry="22" fill="#1b3a8f"/><circle cx="50" cy="45" r="5" fill="#9bd8ff"/><rect x="34" y="82" width="52" height="42" rx="18" fill="#fff"/><rect x="50" y="94" width="20" height="14" rx="4" fill="#22d3ee"/><circle cx="60" cy="134" r="0"/></svg>`;
+const S=[
+{id:"pjok",n:"PJOK",e:"🏃",c:"#ef6c00",t:"Kapten Bolt",g:(u)=>`Siap, ${u}! Aku Kapten Bolt, pelatih di Planet PJOK. Pemanasan dulu, ya, lalu kita bergerak dengan aman!`,p:1.2,
+ch:[{t:"Bab 1: Ayo Bergerak",tp:["Bergerak berpindah tempat","Bergerak tanpa berpindah tempat","Bergerak menggunakan benda","Aktivitas bergerak di air"],m:"Gerak berpindah tempat membuat badan pindah posisi, misalnya berjalan, berlari, dan melompat. Gerak tanpa berpindah tempat dilakukan di tempat, misalnya membungkuk dan memutar lengan. Aktivitas di air harus selalu didampingi orang dewasa."},
+{t:"Bab 2: Ayo Bermain",tp:["Permainan invasi","Permainan net","Permainan lapangan","Permainan target","Permainan kooperatif"],m:"Permainan net memakai jaring pemisah, contohnya bulu tangkis dan bola voli. Permainan kooperatif menekankan kerja sama tim. Bermainlah dengan jujur dan sportif."},
+{t:"Bab 3: Ayo, Merangkai Gerak!",tp:["Aktivitas gerak bersama","Aktivitas senam","Aktivitas bela diri"],m:"Sebelum senam, lakukan pemanasan agar otot siap dan tidak cedera. Bela diri dipelajari untuk menjaga diri dan disiplin, bukan untuk menyakiti orang lain, dan harus dengan pengawasan pelatih."}]},
+{id:"ipas",n:"IPAS",e:"🔬",c:"#0f9d58",t:"Profesor Nova",g:(u)=>`Halo, ${u}! Aku Profesor Nova. Di Planet IPAS kita jadi penyelidik cilik. Yuk, penasaran bersamaku!`,p:1,
+ch:[{t:"Bab 1: Mengubah Bentuk Energi",tp:["Perubahan energi di sekitar kita","Fotosintesis","Mengapa manusia mengubah bentuk energi?"],m:"Energi tidak hilang, tetapi berubah bentuk. Lampu mengubah energi listrik menjadi cahaya dan panas. Pada fotosintesis, tumbuhan hijau memakai cahaya matahari, air, dan karbon dioksida untuk membuat makanan, lalu melepaskan oksigen."},
+{t:"Bab 2: Gaya di Sekitar Kita",tp:["Apa itu gaya?","Menyelidiki gaya gerak","Menyelidiki gaya magnet"],m:"Gaya adalah tarikan atau dorongan. Magnet menarik benda tertentu yang mengandung besi atau baja, seperti paku. Kertas dan plastik tidak ditarik magnet."},
+{t:"Bab 3: Di Sini Tempat Tinggalku",tp:["Mengenal peta","Bentang alam daerahku"],m:"Peta menggambarkan permukaan bumi dengan simbol dan arah. Pada peta, bagian atas biasanya menunjuk ke arah utara."},
+{t:"Bab 4: Iklim dan Perubahannya",tp:["Musim dan iklim di Indonesia","Efek rumah kaca","Gas karbon di sekitarku"],m:"Cuaca adalah keadaan udara pada waktu singkat, sedangkan iklim adalah pola cuaca dalam waktu lama. Indonesia punya dua musim, yaitu musim hujan dan musim kemarau."}]},
+{id:"jawa",n:"Bahasa Jawa",e:"🪭",c:"#a1572b",t:"Mbah Wulan",g:(u)=>`Sugeng rawuh, ${u}! Aku Mbah Wulan, guru Basa Jawa. Ayo sinau aksara lan crita bareng-bareng, ya!`,p:.85,
+ch:[{t:"Aksara Jawa",tp:["Bentuk aksara Jawa dan huruf Latin"],m:"Aksara Jawa carakan dibaca ha na ca ra ka. Contoh: ꦲ dibaca ha, ꦤ dibaca na, ꦕ dibaca ca."},
+{t:"Wulangan 1: Prastawa Alam",tp:["Mengerteni teks narasi","Ngandharake prastawa alam"],m:"Prastawa alam ialah kejadian alam, contohnya banjir, lindhu (gempa), dan gunung mbledhos."},
+{t:"Wulangan 2: Budi Pekerti Sajroning Geguritan",tp:["Memahami geguritan","Maca lan nulis geguritan"],m:"Geguritan ialah puisi dalam bahasa Jawa. Isinya sering memuat pesan budi pekerti."},
+{t:"Wulangan 3: Cerita Rakyat",tp:["Mengerteni crita rakyat","Nyemak crita rakyat"],m:"Crita rakyat ialah cerita dari masyarakat, diwariskan turun-temurun, dan biasanya berisi pesan baik."},
+{t:"Wulangan 4: Pasangan Aksara Jawa",tp:["Pasangan aksara Jawa","Maca lan nulis sandhangan"],m:"Pasangan dipakai untuk menutup bunyi vokal aksara sebelumnya. Sandhangan mengubah bunyi vokal aksara."}]},
+{id:"ing",n:"Bahasa Inggris",e:"🗣️",c:"#7c3aed",t:"Zippy",g:(u)=>`Hi, ${u}! I'm Zippy! Welcome to English Planet. Let's learn and have fun together!`,p:1.35,
+ch:[{t:"My Morning Routine",tp:["Get up!","Time for school"],m:"Morning words: get up (bangun), brush teeth (menyikat gigi), take a bath (mandi), go to school (pergi ke sekolah). Example: I get up at six o'clock."},
+{t:"Meal Time",tp:["Yummy lunch","Spicy noodles"],m:"Food words: rice (nasi), noodles (mi), spicy (pedas), yummy (lezat). Example: The noodles are spicy."},
+{t:"My Toys",tp:["Playing at Friend's House","My Blue Robot"],m:"Toy words: robot, ball, doll, car. Colors: blue (biru), red (merah). Example: This is my blue robot."}]},
+{id:"ind",n:"Bahasa Indonesia",e:"📚",c:"#d6336c",t:"Bu Kata",g:(u)=>`Selamat datang, ${u}! Aku Bu Kata. Di Planet Bahasa Indonesia, kita bermain dengan cerita dan kata. Siap membaca?`,p:1.05,
+ch:[{t:"Bab 1: Sudah Besar",tp:["Kalimat aktif, transitif, intransitif","Menulis surat"],m:"Kalimat transitif membutuhkan objek, misalnya \"Ibu memasak sayur\". Kalimat intransitif tidak membutuhkan objek, misalnya \"Adik tidur\"."},
+{t:"Bab 2: Di Bawah Atap",tp:["Awalan me-","Teks deskripsi"],m:"Awalan me- membentuk kata kerja. Contoh: me- + baca = membaca; me- + tulis = menulis."},
+{t:"Bab 3: Lihat Sekitar",tp:["Awalan ber-","Petunjuk arah"],m:"Awalan ber- juga membentuk kata kerja. Contoh: ber- + main = bermain."},
+{t:"Bab 4: Meliuk dan Menerjang",tp:["Ide pokok dan pendukung","Wawancara"],m:"Ide pokok adalah gagasan utama paragraf. Kalimat pendukung menjelaskan ide pokok."}]},
+{id:"mat",n:"Matematika",e:"🔢",c:"#2563eb",t:"Miko",g:(u)=>`Hai, ${u}! Selamat datang di Planet Matematika! Aku Miko, guru Matematika yang akan menemanimu menjelajahi angka dan memecahkan tantangan. Siap berpetualang?`,p:1.1,
+ch:[{t:"Bab 1: Bilangan Cacah sampai 10.000",tp:["Nilai tempat","Membandingkan dan mengurutkan","Penjumlahan dan pengurangan","Perkalian dan pembagian","Faktor dan kelipatan"],m:"Pada bilangan 4.352, angka 4 bernilai ribuan, 3 ratusan, 5 puluhan, dan 2 satuan. Saat menjumlah, jumlahkan dari satuan lalu ke tempat yang lebih besar."},
+{t:"Bab 2: Pecahan",tp:["Pembilang satu","Pecahan senilai","Desimal dan persen"],m:"Pecahan senilai punya nilai sama. Contoh: 1/2 = 2/4 = 3/6. Kalikan pembilang dan penyebut dengan bilangan yang sama."},
+{t:"Bab 3: Pola Gambar dan Pola Bilangan",tp:["Pola gambar","Pola bilangan"],m:"Pola bilangan punya aturan tetap. Contoh: 2, 4, 6, 8, ... bertambah 2 setiap langkah."}]},
+{id:"pan",n:"Pendidikan Pancasila",e:"🦅",c:"#b91c1c",t:"Garu",g:(u)=>`Halo, ${u}! Aku Garu, sahabatmu di Planet Pancasila. Yuk, belajar hidup rukun dan disiplin!`,p:.95,
+ch:[{t:"Bab 1: Mengenal Lingkungan Sekitar",tp:["Identitas masyarakat","Menghargai perbedaan","Perangkat desa dan kelurahan"],m:"Masyarakat Indonesia beragam suku, agama, dan budaya. Kita saling menghargai. Kepala desa memimpin pemerintahan desa."},
+{t:"Bab 2: Aku Anak yang Disiplin",tp:["Aturan di sekitar","Membuat dan melaksanakan aturan","Hak dan kewajiban"],m:"Hak adalah sesuatu yang kita terima, misalnya mendapat pendidikan. Kewajiban adalah sesuatu yang harus kita lakukan, misalnya menaati tata tertib."}]}
+];
+/* [mapel, indeks bab, soal, opsi, indeks benar, pembahasan] — Tahap 2: Mat, IPAS, PJOK, Pancasila = 30 soal */
+const Q=[
+["pjok",0,"Mana yang termasuk gerak berpindah tempat?",["Berlari","Memutar lengan di tempat","Membungkuk di tempat","Berdiri tegak"],0,"Berlari membuat tubuh pindah posisi, jadi termasuk gerak berpindah tempat."],
+["pjok",0,"Saat bermain di air, apa yang harus dilakukan anak?",["Selalu didampingi orang dewasa","Berenang sendirian","Masuk ke air dalam","Bermain tanpa izin"],0,"Aktivitas air harus didampingi orang dewasa demi keselamatan."],
+["pjok",1,"Manakah permainan net?",["Bulu tangkis","Lompat tali","Petak umpet","Kelereng"],0,"Bulu tangkis dimainkan dengan jaring (net) sebagai pemisah."],
+["pjok",2,"Apa yang sebaiknya dilakukan sebelum senam?",["Pemanasan","Langsung tidur","Makan banyak","Duduk diam"],0,"Pemanasan menyiapkan otot agar tidak cedera."],
+["ipas",0,"Saat lampu menyala, energi listrik berubah menjadi...",["Energi cahaya","Energi bunyi saja","Energi makanan","Energi angin"],0,"Lampu mengubah energi listrik menjadi cahaya (dan sedikit panas)."],
+["ipas",0,"Gas apa yang dilepaskan tumbuhan saat fotosintesis?",["Oksigen","Karbon monoksida","Gas tawa","Asap"],0,"Tumbuhan melepaskan oksigen yang kita hirup."],
+["ipas",1,"Benda mana yang ditarik magnet?",["Paku besi","Kertas","Plastik","Kain"],0,"Magnet menarik benda yang mengandung besi, seperti paku."],
+["ipas",2,"Pada peta, bagian atas biasanya menunjuk arah...",["Utara","Selatan","Timur","Barat"],0,"Pada umumnya peta menempatkan utara di bagian atas."],
+["ipas",3,"Indonesia memiliki berapa musim?",["Dua","Satu","Tiga","Empat"],0,"Indonesia punya musim hujan dan musim kemarau."],
+["jawa",0,"Aksara ꦲ dibaca...",["ha","na","ca","ra"],0,"ꦲ adalah aksara pertama carakan, dibaca ha."],
+["jawa",0,"Aksara ꦤ dibaca...",["na","ha","ka","ca"],0,"ꦤ dibaca na."],
+["jawa",1,"Sing klebu prastawa alam yaiku...",["Banjir","Lomba gendéra","Pasar malem","Dolanan"],0,"Banjir ialah kejadian alam."],
+["jawa",2,"Geguritan iku...",["Puisi Jawa","Resep masakan","Surat dinas","Berita olahraga"],0,"Geguritan ialah puisi dalam bahasa Jawa."],
+["ing",0,"\"Bangun tidur\" dalam bahasa Inggris adalah...",["Get up","Go home","Sit down","Eat lunch"],0,"Get up berarti bangun."],
+["ing",0,"I ___ at six o'clock.",["get up","get cake","get blue","get spicy"],0,"I get up at six o'clock = Aku bangun pukul enam."],
+["ing",1,"\"Spicy noodles\" artinya...",["Mi pedas","Nasi manis","Teh dingin","Roti hangat"],0,"Spicy = pedas, noodles = mi."],
+["ing",2,"\"My blue robot\" artinya...",["Robot biruku","Bolaku merah","Bonekaku besar","Mobilku hijau"],0,"Blue = biru, robot = robot."],
+["ind",0,"Kalimat transitif adalah...",["Ibu memasak sayur.","Adik tidur.","Burung terbang.","Kakak berlari."],0,"Memasak butuh objek (sayur), jadi transitif."],
+["ind",0,"Kalimat \"Adik tidur\" termasuk kalimat...",["Intransitif","Transitif","Tanya","Perintah"],0,"Kata tidur tidak membutuhkan objek, jadi intransitif."],
+["ind",1,"me- + tulis menjadi...",["menulis","mentulis","metulis","memulis"],0,"Huruf t luluh: me- + tulis = menulis."],
+["ind",2,"ber- + main menjadi...",["bermain","bemain","membermain","pemain"],0,"ber- + main = bermain."],
+["ind",3,"Ide pokok paragraf adalah...",["Gagasan utama paragraf","Judul buku","Nama pengarang","Kalimat terakhir saja"],0,"Ide pokok adalah gagasan utama yang dijelaskan paragraf."],
+["mat",0,"Pada 4.352, angka 3 menempati nilai tempat...",["Ratusan","Satuan","Puluhan","Ribuan"],0,"4.352: 4 ribuan, 3 ratusan, 5 puluhan, 2 satuan."],
+["mat",0,"2.500 + 1.750 = ...",["4.250","3.250","4.150","4.350"],0,"2.500 + 1.750 = 4.250 (500+750=1.250; 2.000+1.000+1.250)."],
+["mat",1,"Pecahan yang senilai dengan 1/2 adalah...",["2/4","1/4","2/3","3/4"],0,"1/2 dikali 2 pada pembilang dan penyebut menjadi 2/4."],
+["mat",2,"Lanjutkan pola: 2, 4, 6, 8, ...",["10","9","12","11"],0,"Pola bertambah 2, jadi setelah 8 adalah 10."],
+["pan",0,"Siapa yang memimpin pemerintahan desa?",["Kepala desa","Kepala sekolah","Wasit","Pelatih"],0,"Kepala desa memimpin pemerintahan desa."],
+["pan",0,"Temanmu berbeda suku. Sikap yang baik adalah...",["Tetap berteman dan saling menghargai","Menjauhinya","Mengejeknya","Tidak mau bermain"],0,"Perbedaan harus dihargai, itulah semangat Bhinneka Tunggal Ika."],
+["pan",1,"Contoh kewajiban siswa adalah...",["Menaati tata tertib sekolah","Mendapat pendidikan","Mendapat rasa aman","Bermain bebas"],0,"Menaati tata tertib adalah kewajiban; mendapat pendidikan adalah hak."],
+["mat", 0, "Bilangan 7.205 dibaca...", ["Tujuh ribu dua ratus lima", "Tujuh ribu dua puluh lima", "Tujuh ratus dua ribu lima", "Tujuh ribu lima ratus dua"], 0, "7.205 = 7 ribuan, 2 ratusan, 0 puluhan, 5 satuan."],
+["mat", 0, "Enam ribu empat ratus tiga puluh ditulis...", ["6.430", "6.403", "6.043", "6.340"], 0, "6 ribuan, 4 ratusan, 3 puluhan, 0 satuan = 6.430."],
+["mat", 0, "Nilai angka 5 pada bilangan 5.280 adalah...", ["5.000", "500", "50", "5"], 0, "Angka 5 berada di tempat ribuan, jadi nilainya 5.000."],
+["mat", 0, "Nilai angka 7 pada bilangan 3.074 adalah...", ["70", "700", "7", "7.000"], 0, "Angka 7 berada di tempat puluhan, jadi nilainya 70."],
+["mat", 0, "Bilangan terbesar adalah...", ["4.321", "4.312", "4.231", "4.132"], 0, "Bandingkan dari ribuan, lalu ratusan: 4.321 paling besar."],
+["mat", 0, "3.456 ... 3.465. Tanda yang tepat adalah...", ["<", ">", "=", "+"], 0, "Ribuan dan ratusan sama, puluhan 5 lebih kecil dari 6, jadi 3.456 < 3.465."],
+["mat", 0, "Bilangan terkecil dari 5.040, 5.004, 5.400, 5.044 adalah...", ["5.004", "5.040", "5.044", "5.400"], 0, "Ribuan dan ratusan sama untuk 5.004, 5.040, dan 5.044; puluhan dan satuan 5.004 paling kecil."],
+["mat", 0, "6.000 + 500 + 30 + 2 = ...", ["6.532", "6.352", "6.523", "6.253"], 0, "6 ribuan, 5 ratusan, 3 puluhan, 2 satuan = 6.532."],
+["mat", 0, "3.468 − 1.245 = ...", ["2.223", "2.233", "2.323", "2.213"], 0, "3.468 − 1.245 = 2.223."],
+["mat", 0, "5.000 − 2.350 = ...", ["2.650", "2.750", "3.650", "2.550"], 0, "5.000 − 2.000 = 3.000; 3.000 − 350 = 2.650."],
+["mat", 0, "1.234 + 2.345 = ...", ["3.579", "3.469", "3.589", "3.479"], 0, "1.234 + 2.345 = 3.579."],
+["mat", 0, "4.826 + 3.175 = ...", ["8.001", "7.991", "8.101", "7.901"], 0, "Satuan 6+5=11, tulis 1 simpan 1; lanjut hingga hasil 8.001."],
+["mat", 0, "125 × 3 = ...", ["375", "365", "385", "325"], 0, "100×3=300, 25×3=75, jadi 375."],
+["mat", 0, "480 ÷ 4 = ...", ["120", "110", "140", "12"], 0, "4 × 120 = 480, jadi 480 ÷ 4 = 120."],
+["mat", 0, "Manakah faktor dari 12?", ["6", "5", "7", "8"], 0, "12 ÷ 6 = 2 tanpa sisa, jadi 6 faktor dari 12."],
+["mat", 0, "Manakah kelipatan 4?", ["12", "10", "14", "18"], 0, "4 × 3 = 12, jadi 12 kelipatan 4."],
+["mat", 1, "Satu dari empat bagian sama ditulis...", ["1/4", "4/1", "1/3", "2/4"], 0, "Pembilang 1 (bagian diambil), penyebut 4 (jumlah bagian sama)."],
+["mat", 1, "Pizza dipotong 8 sama besar. Adi makan 1 potong. Pecahannya...", ["1/8", "8/1", "1/7", "2/8"], 0, "Ada 8 potong sama besar, diambil 1, jadi 1/8."],
+["mat", 1, "2/3 senilai dengan...", ["4/6", "3/2", "2/6", "4/9"], 0, "Kalikan pembilang dan penyebut dengan 2: 4/6."],
+["mat", 1, "2/5 senilai dengan...", ["4/10", "2/10", "5/2", "4/5"], 0, "Dikali 2 pada keduanya: 4/10."],
+["mat", 1, "Pecahan desimal 0,7 sama dengan...", ["7/10", "7/100", "70/10", "1/7"], 0, "Satu angka di belakang koma berarti persepuluhan: 7/10."],
+["mat", 1, "25/100 sama dengan...", ["25%", "2,5%", "250%", "0,25%"], 0, "Persen artinya per seratus, jadi 25/100 = 25%."],
+["mat", 2, "Lanjutkan pola: 5, 10, 15, 20, ...", ["25", "30", "24", "21"], 0, "Bertambah 5 setiap langkah, setelah 20 adalah 25."],
+["mat", 2, "Lanjutkan pola: 100, 90, 80, 70, ...", ["60", "80", "50", "65"], 0, "Berkurang 10 setiap langkah, setelah 70 adalah 60."],
+["mat", 2, "Lanjutkan pola: 1, 3, 5, 7, ...", ["9", "8", "10", "11"], 0, "Bertambah 2 setiap langkah, setelah 7 adalah 9."],
+["mat", 2, "Lanjutkan pola: 3, 6, 12, 24, ...", ["48", "36", "30", "27"], 0, "Setiap bilangan dikali 2, jadi 24 × 2 = 48."],
+["ipas", 0, "Pada kipas angin, energi listrik berubah menjadi energi...", ["Gerak", "Makanan", "Kimia saja", "Magnet"], 0, "Motor kipas mengubah energi listrik menjadi energi gerak."],
+["ipas", 0, "Sumber energi utama bagi bumi adalah...", ["Matahari", "Bulan", "Bintang kecil", "Angin saja"], 0, "Matahari memberi cahaya dan panas bagi kehidupan di bumi."],
+["ipas", 0, "Proses tumbuhan membuat makanan sendiri disebut...", ["Fotosintesis", "Pernapasan", "Penguapan", "Pembusukan"], 0, "Fotosintesis: tumbuhan membuat makanan memakai cahaya matahari."],
+["ipas", 0, "Bahan fotosintesis selain cahaya matahari dan air adalah...", ["Karbon dioksida", "Oksigen", "Besi", "Garam"], 0, "Tumbuhan menyerap karbon dioksida dari udara."],
+["ipas", 0, "Fotosintesis terutama terjadi di bagian...", ["Daun", "Akar", "Batang kayu", "Bunga layu"], 0, "Daun hijau mengandung klorofil untuk fotosintesis."],
+["ipas", 0, "Pada setrika listrik, energi listrik berubah menjadi...", ["Energi panas", "Energi bunyi", "Energi angin", "Energi air"], 0, "Setrika mengubah energi listrik menjadi panas."],
+["ipas", 0, "Pada radio, energi listrik berubah menjadi energi...", ["Bunyi", "Panas saja", "Makanan", "Gerak saja"], 0, "Radio mengubah energi listrik menjadi bunyi."],
+["ipas", 0, "Energi tidak hilang, tetapi...", ["Berubah bentuk", "Menjadi benda", "Lenyap", "Berhenti selamanya"], 0, "Energi berubah bentuk dari satu bentuk ke bentuk lain."],
+["ipas", 1, "Gaya adalah...", ["Tarikan atau dorongan", "Warna benda", "Bunyi benda", "Bau benda"], 0, "Gaya berupa tarikan atau dorongan pada benda."],
+["ipas", 1, "Saat membuka pintu dengan mendorongnya, kamu memakai...", ["Gaya dorong", "Gaya magnet", "Cahaya", "Panas"], 0, "Mendorong pintu adalah gaya dorong."],
+["ipas", 1, "Sepeda melambat di jalan kasar karena ada gaya...", ["Gesek", "Magnet", "Listrik", "Cahaya"], 0, "Gaya gesek antara ban dan jalan memperlambat sepeda."],
+["ipas", 1, "Bola yang dilempar ke atas akan jatuh karena gaya...", ["Gravitasi", "Magnet", "Gesek ban", "Listrik"], 0, "Gravitasi bumi menarik benda ke bawah."],
+["ipas", 1, "Dua kutub magnet yang sejenis akan...", ["Tolak-menolak", "Tarik-menarik", "Meleleh", "Menyatu"], 0, "Kutub sejenis tolak-menolak, berbeda jenis tarik-menarik."],
+["ipas", 1, "Kutub utara dan kutub selatan magnet akan...", ["Tarik-menarik", "Tolak-menolak", "Diam saja", "Terbakar"], 0, "Kutub berbeda jenis saling tarik-menarik."],
+["ipas", 1, "Benda yang tidak ditarik magnet adalah...", ["Penghapus karet", "Peniti besi", "Paku", "Jarum baja"], 0, "Karet tidak mengandung besi sehingga tidak ditarik magnet."],
+["ipas", 2, "Gambar kecil pada peta yang mewakili objek disebut...", ["Simbol", "Kutub", "Gaya", "Energi"], 0, "Simbol peta mewakili objek seperti sekolah atau sungai."],
+["ipas", 2, "Arah di antara utara dan timur adalah...", ["Timur laut", "Barat daya", "Tenggara", "Barat laut"], 0, "Antara utara dan timur disebut timur laut."],
+["ipas", 2, "Bentang alam yang menjulang tinggi dengan puncak adalah...", ["Gunung", "Laut", "Sungai", "Pantai"], 0, "Gunung adalah bentang alam yang menjulang tinggi."],
+["ipas", 2, "Alat untuk menunjukkan arah mata angin adalah...", ["Kompas", "Penggaris", "Termometer", "Timbangan"], 0, "Kompas memakai jarum magnet yang menunjuk arah utara."],
+["ipas", 3, "Iklim adalah...", ["Pola cuaca dalam waktu lama", "Cuaca hari ini", "Hujan sebentar", "Angin pagi ini"], 0, "Cuaca singkat, iklim adalah pola cuaca dalam waktu lama."],
+["ipas", 3, "Mana yang menggambarkan cuaca?", ["Hari ini hujan deras", "Indonesia beriklim tropis", "Dua musim sepanjang tahun", "Pola hujan sepuluh tahun"], 0, "Cuaca adalah keadaan udara pada waktu singkat."],
+["ipas", 3, "Salah satu gas rumah kaca adalah...", ["Karbon dioksida", "Oksigen murni", "Helium", "Nitrogen saja"], 0, "Karbon dioksida menahan panas di atmosfer."],
+["ipas", 3, "Jika gas rumah kaca terlalu banyak, suhu bumi menjadi...", ["Lebih panas", "Lebih dingin", "Tetap membeku", "Tidak ada siang"], 0, "Gas berlebih menahan panas sehingga bumi memanas."],
+["ipas", 3, "Cara membantu mengurangi karbon dioksida adalah...", ["Menanam pohon", "Membakar sampah", "Menyalakan lampu terus", "Membuang plastik"], 0, "Pohon menyerap karbon dioksida saat fotosintesis."],
+["ipas", 3, "Musim kemarau ditandai dengan...", ["Hujan sedikit", "Banjir terus", "Salju turun", "Hujan setiap hari"], 0, "Kemarau berarti curah hujan sedikit."],
+["pjok", 0, "Mana yang termasuk gerak tanpa berpindah tempat?", ["Memutar pinggul", "Berlari", "Melompat jauh", "Berjalan"], 0, "Memutar pinggul dilakukan di tempat tanpa pindah posisi."],
+["pjok", 0, "Melompat termasuk gerak...", ["Berpindah tempat", "Tanpa berpindah tempat", "Diam", "Tidur"], 0, "Saat melompat, posisi tubuh berpindah."],
+["pjok", 0, "Berjalan mengelilingi lapangan termasuk gerak...", ["Berpindah tempat", "Tanpa berpindah tempat", "Menggunakan benda", "Bergerak di air"], 0, "Berjalan membuat tubuh berpindah dari satu tempat ke tempat lain."],
+["pjok", 0, "Meregangkan kedua tangan ke atas di tempat termasuk gerak...", ["Tanpa berpindah tempat", "Berpindah tempat", "Berlari", "Melompat"], 0, "Gerakan dilakukan di tempat, jadi tanpa berpindah tempat."],
+["pjok", 0, "Melempar bola ke teman termasuk gerak...", ["Menggunakan benda", "Tanpa alat", "Di dalam air", "Tidur"], 0, "Melempar memakai bola sebagai benda."],
+["pjok", 0, "Menendang bola termasuk gerak menggunakan...", ["Benda", "Air", "Matras", "Cermin"], 0, "Menendang melibatkan bola sebagai benda."],
+["pjok", 0, "Memantulkan bola dengan tangan adalah gerak...", ["Menggunakan benda", "Tanpa benda", "Bela diri", "Senam lantai"], 0, "Bola adalah benda yang digerakkan."],
+["pjok", 0, "Sebelum berenang sebaiknya kita...", ["Melakukan pemanasan", "Makan sangat banyak", "Langsung loncat", "Tidak izin"], 0, "Pemanasan membantu otot siap dan mengurangi cedera."],
+["pjok", 0, "Berenang di kolam yang dalam harus...", ["Ditemani orang dewasa", "Sendirian", "Tanpa pengawas", "Bersama teman saja"], 0, "Orang dewasa harus mengawasi demi keselamatan."],
+["pjok", 0, "Setelah berenang sebaiknya kita...", ["Mandi bersih dan mengeringkan badan", "Tidur di tepi kolam", "Minum air kolam", "Tetap basah"], 0, "Badan dibersihkan dan dikeringkan agar tetap sehat."],
+["pjok", 1, "Permainan invasi bertujuan...", ["Menyerang ke area lawan dan mencetak poin", "Melempar jauh saja", "Berlari sendirian", "Berdiam diri"], 0, "Pada permainan invasi, tim menyerang dan bertahan di area lawan."],
+["pjok", 1, "Manakah permainan invasi?", ["Sepak bola", "Lompat tali", "Petak umpet", "Kelereng"], 0, "Sepak bola adalah permainan invasi."],
+["pjok", 1, "Bola voli termasuk permainan...", ["Net", "Target", "Kooperatif saja", "Air"], 0, "Bola voli dimainkan dengan jaring (net) sebagai pemisah."],
+["pjok", 1, "Alat pemisah dalam permainan net adalah...", ["Jaring", "Pagar", "Meja makan", "Tali jemuran"], 0, "Net adalah jaring pemisah dua tim."],
+["pjok", 1, "Kasti termasuk permainan...", ["Lapangan", "Net", "Target", "Air"], 0, "Kasti dimainkan dengan memukul bola dan berlari di lapangan."],
+["pjok", 1, "Permainan boling bertujuan mengenai sasaran, sehingga termasuk permainan...", ["Target", "Net", "Invasi", "Air"], 0, "Permainan target mengutamakan ketepatan mengenai sasaran."],
+["pjok", 1, "Melempar bola ke dalam ember dari jarak tertentu termasuk permainan...", ["Target", "Net", "Invasi", "Berenang"], 0, "Pemain berusaha tepat mengenai sasaran."],
+["pjok", 1, "Kunci permainan kooperatif adalah...", ["Kerja sama", "Curang", "Menang sendiri", "Diam"], 0, "Kooperatif berarti bekerja sama mencapai tujuan bersama."],
+["pjok", 1, "Jika timmu kalah, sikap sportif adalah...", ["Menerima dan memberi selamat", "Marah", "Menyalahkan teman", "Pergi"], 0, "Sportif berarti jujur dan menghargai lawan."],
+["pjok", 2, "Senam lantai sebaiknya dilakukan di atas...", ["Matras", "Aspal", "Batu", "Lantai basah"], 0, "Matras mengurangi risiko cedera."],
+["pjok", 2, "Pendinginan dilakukan...", ["Setelah berolahraga", "Sebelum bangun tidur", "Tidak pernah", "Saat tidur"], 0, "Pendinginan membantu tubuh kembali tenang setelah olahraga."],
+["pjok", 2, "Gerak berirama dilakukan dengan mengikuti...", ["Irama atau ketukan", "Cuaca", "Warna baju", "Nama teman"], 0, "Gerakan disesuaikan dengan irama atau ketukan."],
+["pjok", 2, "Bela diri dipelajari untuk...", ["Menjaga diri dan disiplin", "Menyakiti teman", "Menakut-nakuti", "Bertengkar"], 0, "Bela diri melatih disiplin dan menjaga diri, bukan menyakiti."],
+["pjok", 2, "Belajar bela diri sebaiknya...", ["Diawasi pelatih", "Sendirian tanpa pengawas", "Dengan teman tanpa aturan", "Di jalan raya"], 0, "Pengawasan pelatih menjaga keselamatan."],
+["pjok", 2, "Sebelum dan sesudah latihan bela diri, kita...", ["Saling memberi hormat", "Saling mengejek", "Saling mendorong", "Pergi"], 0, "Memberi hormat adalah sikap menghargai teman dan pelatih."],
+["pan", 0, "Bhinneka Tunggal Ika artinya...", ["Berbeda-beda tetapi tetap satu", "Satu untuk semua saja", "Kaya dan miskin", "Besar dan kecil"], 0, "Meski berbeda suku dan budaya, bangsa Indonesia tetap satu."],
+["pan", 0, "Pakaian adat termasuk identitas...", ["Budaya", "Hewan", "Cuaca", "Mesin"], 0, "Pakaian adat menunjukkan kebudayaan suatu daerah."],
+["pan", 0, "Sekretaris desa membantu kepala desa dalam bidang...", ["Administrasi", "Olahraga", "Pertanian saja", "Pelayaran"], 0, "Sekretaris desa mengurus administrasi desa."],
+["pan", 0, "Kelurahan dipimpin oleh...", ["Lurah", "Kepala sekolah", "Wasit", "Dokter"], 0, "Lurah memimpin kelurahan."],
+["pan", 0, "Ketua RT dipilih untuk memimpin...", ["Satu lingkungan tetangga", "Satu negara", "Satu provinsi", "Satu benua"], 0, "RT adalah kelompok tetangga dalam satu lingkungan."],
+["pan", 0, "Tetangga sedang beribadah. Sikap yang baik adalah...", ["Menghormati dan tidak berisik", "Bernyanyi keras", "Mengganggu", "Mengejek"], 0, "Menghormati ibadah orang lain adalah sikap toleran."],
+["pan", 0, "Kerja bakti membersihkan lingkungan adalah contoh...", ["Gotong royong", "Pertengkaran", "Perlombaan", "Kesendirian"], 0, "Gotong royong berarti bekerja bersama untuk kepentingan bersama."],
+["pan", 0, "Melestarikan bahasa daerah berarti...", ["Menggunakan dan menjaga bahasa daerah", "Melupakannya", "Melarangnya", "Mengejeknya"], 0, "Bahasa daerah adalah bagian identitas yang perlu dijaga."],
+["pan", 0, "Menyelesaikan masalah bersama dengan berdiskusi disebut...", ["Musyawarah", "Perkelahian", "Persaingan", "Pertunjukan"], 0, "Musyawarah mencari kesepakatan bersama."],
+["pan", 0, "Temanmu berbicara dengan logat daerah berbeda. Sikapmu...", ["Tidak menertawakan", "Menertawakan", "Menirukan untuk mengejek", "Menjauhinya"], 0, "Setiap daerah punya ciri bahasa yang patut dihargai."],
+["pan", 0, "Lambang negara Indonesia adalah...", ["Garuda Pancasila", "Harimau", "Rajawali putih", "Banteng saja"], 0, "Garuda Pancasila adalah lambang negara Indonesia."],
+["pan", 0, "Perbedaan di masyarakat adalah...", ["Kekayaan bangsa", "Alasan bertengkar", "Hal yang memalukan", "Hal yang harus dihapus"], 0, "Perbedaan memperkaya bangsa jika saling menghargai."],
+["pan", 0, "Tetangga mengalami kesulitan. Sikap yang baik adalah...", ["Membantu sesuai kemampuan", "Pura-pura tidak tahu", "Menertawakan", "Menjauh"], 0, "Peduli dan membantu adalah sikap baik dalam masyarakat."],
+["pan", 0, "Warga baru di lingkunganmu sebaiknya disambut dengan...", ["Ramah", "Dijauhi", "Diejek", "Dicuekin"], 0, "Sikap ramah membuat hidup bermasyarakat rukun."],
+["pan", 1, "Aturan dibuat untuk...", ["Ketertiban dan keselamatan", "Menyusahkan orang", "Hiasan", "Pamer"], 0, "Aturan membuat kehidupan tertib dan aman."],
+["pan", 1, "Contoh aturan di sekolah adalah...", ["Memakai seragam sesuai ketentuan", "Datang kapan saja", "Membuang sampah sembarangan", "Berteriak di kelas"], 0, "Seragam sesuai ketentuan adalah salah satu aturan sekolah."],
+["pan", 1, "Saat lampu lalu lintas merah, kendaraan harus...", ["Berhenti", "Ngebut", "Berbelok sembarangan", "Membunyikan klakson terus"], 0, "Lampu merah berarti berhenti."],
+["pan", 1, "Pejalan kaki sebaiknya menyeberang di...", ["Zebra cross", "Tengah jalan tol", "Tikungan", "Mana saja"], 0, "Zebra cross adalah tempat aman untuk menyeberang."],
+["pan", 1, "Disiplin artinya...", ["Taat pada aturan", "Melanggar aturan", "Malas", "Terlambat"], 0, "Disiplin berarti patuh dan tertib pada aturan."],
+["pan", 1, "Contoh hak anak adalah...", ["Mendapat kasih sayang", "Membolos", "Mencontek", "Menunda belajar"], 0, "Anak berhak mendapat kasih sayang dan perlindungan."],
+["pan", 1, "Contoh hak yang diterima anak adalah...", ["Mendapat layanan kesehatan", "Membuang sampah sembarangan", "Tidak menaati aturan", "Datang terlambat"], 0, "Layanan kesehatan adalah hak anak."],
+["pan", 1, "Salah satu kewajiban siswa di sekolah adalah...", ["Belajar dengan rajin", "Meminta semua mainan", "Tidak mengerjakan tugas", "Membolos"], 0, "Belajar rajin adalah kewajiban sebagai siswa."],
+["pan", 1, "Contoh kewajiban anak di rumah adalah...", ["Membantu orang tua", "Berteriak", "Merusak barang", "Tidak mau makan"], 0, "Membantu pekerjaan ringan di rumah adalah kewajiban sebagai anggota keluarga."],
+["pan", 1, "Jika melanggar aturan kelas, sikap yang baik adalah...", ["Mengakui kesalahan dan memperbaikinya", "Menyalahkan teman", "Berbohong", "Kabur"], 0, "Berani mengakui dan memperbaiki kesalahan adalah sikap bertanggung jawab."],
+["pan", 1, "Aturan kelas yang baik dibuat...", ["Bersama melalui musyawarah", "Sendiri tanpa diskusi", "Dengan memaksa", "Diam-diam"], 0, "Aturan bersama lebih mudah ditaati."],
+["pan", 1, "Hak dan kewajiban harus...", ["Seimbang", "Dipilih salah satu", "Dilupakan", "Ditukar uang"], 0, "Kita menerima hak dan juga menjalankan kewajiban."],
+["pan", 1, "Membuang sampah pada tempatnya adalah...", ["Kewajiban menjaga kebersihan", "Hak bermain", "Pekerjaan guru saja", "Pilihan bebas"], 0, "Menjaga kebersihan adalah kewajiban semua warga."],
+["pjok", 1, "Dalam permainan kelompok, pemain yang baik...", ["Mau bekerja sama dan bergiliran", "Menguasai bola sendiri", "Menyalahkan teman", "Tidak mau bermain"], 0, "Pemain yang baik mau bekerja sama, bergiliran, dan menghargai teman."]
+].map((r,i)=>({id:"q"+i,s:r[0],c:r[1],q:r[2],o:r[3],a:r[4],e:r[5]}));
+
+/* ===== STATE & PENYIMPANAN (MODE COBA = lokal) ===== */
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const $=s=>document.querySelector(s);
+let U=null,D=null,V={v:"intro"},QS=null;
+const store={get(){try{return JSON.parse(localStorage.getItem("gl_demo")||"{}")}catch(e){return{}}},set(o){try{localStorage.setItem("gl_demo",JSON.stringify(o))}catch(e){alert("Penyimpanan peramban tidak tersedia.")}}};
+async function hash(s){const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode("gl:"+s));return[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("")}
+function save(){const o=store.get();o[U].d=D;store.set(o)}
+async function auth(name,pin,reg){
+ name=name.trim().toLowerCase();
+ if(!/^[a-z0-9_]{3,12}$/.test(name))return"Nama pengguna 3–12 huruf/angka tanpa spasi.";
+ if(!/^\d{4}$/.test(pin))return"PIN harus 4 angka.";
+ const o=store.get(),h=await hash(name+pin);
+ if(reg){if(o[name])return"Nama itu sudah dipakai. Coba nama lain.";o[name]={h,d:{pts:0,mat:{},ans:{},log:[]}};store.set(o)}
+ else if(!o[name]||o[name].h!==h)return"Nama atau PIN belum cocok. Coba lagi, ya!";
+ U=name;D=store.get()[name].d;return null}
+function award(n,why){D.pts+=n;D.log.push([why,n]);save()}
+
+/* ===== AUDIO: SUARA GURU, MUSIK, EFEK ===== */
+const TTS="speechSynthesis" in window;
+let _a={};try{_a=JSON.parse(localStorage.getItem("gl_audio")||"{}")}catch(e){}
+const AU={ctx:null,on:false,area:"home",tm:null,n:0,set:Object.assign({m:.5,s:.7,t:1,v:.8,mute:false},_a)};
+function persistAu(){try{localStorage.setItem("gl_audio",JSON.stringify(AU.set))}catch(e){}if(D){D.audio=Object.assign({},AU.set);save()}}
+function au(){const C=window.AudioContext||window.webkitAudioContext;if(AU.ctx||!C)return;const c=AU.ctx=new C();AU.mv=c.createGain();AU.mus=c.createGain();AU.sx=c.createGain();AU.mus.connect(AU.mv);AU.sx.connect(AU.mv);AU.mv.connect(c.destination);applyAu()}
+function applyAu(){if(!AU.ctx)return;const q=AU.set,t=AU.ctx.currentTime;AU.mv.gain.setTargetAtTime(q.mute?0:q.v,t,.05);AU.mus.gain.setTargetAtTime(q.m*.25,t,.05);AU.sx.gain.setTargetAtTime(q.s,t,.05)}
+function duck(on){if(!AU.ctx)return;AU.mus.gain.setTargetAtTime(AU.set.m*.25*(on?.3:1),AU.ctx.currentTime,.15)}
+function tone(f,t0,d,w,vol,dest){const c=AU.ctx,o=c.createOscillator(),g=c.createGain();o.type=w;o.frequency.value=f;g.gain.setValueAtTime(0,t0);g.gain.linearRampToValueAtTime(vol,t0+.03);g.gain.exponentialRampToValueAtTime(.0001,t0+d);o.connect(g);g.connect(dest);o.start(t0);o.stop(t0+d+.05)}
+/* [nada dasar Hz, tangga nada (semiton), tempo ms, gelombang] — satu suasana per area */
+const MA={home:[262,[0,2,4,7,9],520,"triangle"],pjok:[294,[0,2,4,7,9],380,"triangle"],ipas:[330,[0,2,3,7,10],480,"sine"],jawa:[220,[0,1,5,7,8],620,"sine"],ing:[392,[0,2,4,5,7,9,11],430,"triangle"],ind:[262,[0,2,4,7,9],600,"sine"],mat:[330,[0,4,7,12,7,4],340,"triangle"],pan:[247,[0,2,4,5,7],560,"sine"],quiz:[294,[0,3,5,7,10],300,"triangle"],shop:[392,[0,2,4,7,9],450,"triangle"]};
+function musicTick(){if(!AU.ctx||AU.ctx.state!=="running"||!AU.on)return;const m=MA[AU.area]||MA.home,r=m[0],sc=m[1],b=m[2],t=AU.ctx.currentTime+.05,n=AU.n++;
+ const deg=sc[(n*3+(n>>2))%sc.length];tone(r*(n%8===0?.5:1)*Math.pow(2,deg/12),t,b/1000*1.6,m[3],.5,AU.mus);
+ if(n%4===0)tone(r/2*Math.pow(2,sc[0]/12),t,b/1000*3,"sine",.5,AU.mus);
+ AU.tm=setTimeout(musicTick,b)}
+function startMusic(){if(!AU.ctx)return;AU.on=true;AU.ctx.resume().then(()=>{clearTimeout(AU.tm);musicTick()})}
+function setArea(a){if(a===AU.area)return;AU.area=a;AU.n=0;if(AU.on){clearTimeout(AU.tm);musicTick()}}
+const areaOf=()=>(V.v==="subj"||V.v==="chap")?V.i:(V.v==="quiz"||V.v==="qg")?"quiz":V.v==="shop"?"shop":"home";
+document.addEventListener("visibilitychange",()=>{if(!AU.ctx||!AU.on)return;if(document.hidden){clearTimeout(AU.tm);AU.ctx.suspend();stop()}else AU.ctx.resume().then(()=>{clearTimeout(AU.tm);musicTick()})});
+function sfx(k){if(!AU.ctx||AU.set.mute)return;const t=AU.ctx.currentTime,P={click:[[660,0,.07]],enter:[[392,0,.12],[523,.1,.12],[784,.2,.25]],ok:[[523,0,.12],[659,.1,.12],[784,.2,.25]],no:[[330,0,.2],[262,.18,.3]],reward:[[784,0,.1],[988,.1,.1],[1175,.2,.3]],win:[[523,0,.15],[659,.15,.15],[784,.3,.15],[1047,.45,.4]]}[k]||[];P.forEach(x=>tone(x[0],t+x[1],x[2],"sine",.6,AU.sx))}
+
+/* Profil suara tiap guru: [pitch, rate] — sengaja dibuat berbeda */
+const VP={pjok:[1.25,1.06],ipas:[1.1,1],jawa:[.8,.86],ing:[1.5,.92],ind:[1,.9],mat:[1.3,1.03],pan:[.9,.88]};
+let SPK=0;
+function pickVoice(sid,lang){if(!TTS)return null;const ovn=((AU.set.vp||{})[sid]||{}).v;if(ovn){const fv=speechSynthesis.getVoices().find(x=>x.name===ovn);if(fv)return fv}const vs=speechSynthesis.getVoices().filter(v=>v.lang.toLowerCase().replace("_","-").startsWith(lang.slice(0,2).toLowerCase()));if(!vs.length)return null;const ex=vs.filter(v=>v.lang.toLowerCase().replace("_","-")===lang.toLowerCase()),l=ex.length?ex:vs;return l[S.findIndex(x=>x.id===sid)%l.length]}
+const clean=t=>t.replace(/[\u{1F000}-\u{1FFFF}\u2600-\u27BF\uA980-\uA9DF]/gu," ").replace(/\s*[—–]\s*/g,", ").replace(/\s+/g," ").trim();
+function talk(on){const a=$("#av");if(a)a.classList.toggle("talk",on);duck(on)}
+function stop(){SPK++;if(TTS)speechSynthesis.cancel();talk(false)}
+function say(text,sid,lang,done){if(!TTS||AU.set.mute)return;stop();const d0=VP[sid]||[1,.92],ov=(AU.set.vp||{})[sid]||{},pr=[ov.p!=null?ov.p:d0[0],ov.r!=null?ov.r:d0[1]],parts=clean(text).match(/[^.!?…]+[.!?…]*/g)||[],my=++SPK;lang=lang||"id-ID";const v=pickVoice(sid,lang);
+ const run=i=>{if(my!==SPK)return;if(i>=parts.length){talk(false);if(done)done();return}const t=parts[i].trim(),u=new SpeechSynthesisUtterance(t);u.lang=v?v.lang:lang;if(v)u.voice=v;u.pitch=Math.min(2,pr[0]+(t.endsWith("?")?.12:0)+(t.endsWith("!")?.08:0));u.rate=pr[1]+(t.endsWith("!")?.05:0);u.volume=Math.min(1,AU.set.t);u.onstart=()=>{if(my===SPK)talk(true)};u.onend=()=>setTimeout(()=>run(i+1),260);u.onerror=()=>{if(my===SPK)talk(false)};speechSynthesis.speak(u)};
+ duck(true);run(0)}
+const spk=(t,sid,l)=>TTS?`<button class="btn sec" data-a="say" data-t="${esc(t)}" data-sid="${sid}" data-l="${l||"id-ID"}">🔊 Dengarkan</button> <button class="btn ghost" style="color:#14224d;background:#e5e7eb" data-a="stop">⏹ Stop</button>`:"";
+
+/* Dialog guru: [benar x5, salah x5, sapaan balik x3]. {n} = nama pemain */
+const T={
+pjok:[["Mantap, {n}! Pas banget!","Yes! Itu baru atlet cilik!","Betul! Badan boleh gerak, otak juga jago!","Hebat! Satu poin buat tim kita!","Tepat sekali! Ayo lanjut, jangan kendor!"],["Hampir, {n}! Namanya juga latihan.","Belum pas, tapi semangat jangan turun ya!","Wah, kepeleset sedikit. Nggak apa-apa, lanjut!","Hmm, belum tepat. Pemanasan dulu, otaknya juga perlu!","Ups! Atlet hebat juga pernah salah kok."],["Nah, {n} balik lagi! Siap gerak?","Halo lagi, {n}! Pemanasan dulu, yuk!","Ayo ayo, {n}! Kapten Bolt udah nungguin nih!"]],
+ipas:[["Wah, betul sekali, {n}! Penyelidik hebat!","Yes! Hasil percobaanmu pas!","Nah, itu dia! Kamu teliti banget.","Benar! Rasa penasaranmu keren!","Tepat! Ilmuwan cilik kita beraksi lagi."],["Hmm, belum pas, {n}. Ilmuwan memang sering salah dulu.","Eits, hampir! Kita lihat bareng jawabannya ya.","Belum tepat. Tenang, dari salah kita belajar!","Wah, hasilnya beda. Yuk cek penjelasannya!","Ups! Ini kesempatan bagus buat tahu hal baru."],["Hai lagi, {n}! Ada percobaan seru nih!","Wah, {n} datang! Aku baru nemu sesuatu menarik.","Yuk, {n}, lanjut menyelidiki!"]],
+jawa:[["Pinter, {n}! Bener banget!","Nah, ngunu! Betul, Nak.","Sae tenan, {n}! Jawabanmu pas.","Wah, apik! Terusno ya, Nak.","Leres! Mbah bangga sama kamu."],["Durung pas, Nak. Ora popo, sabar ya.","Hampir, {n}! Ayo dipelajari bareng.","Waduh, kleru sithik. Ora masalah kok.","Hmm, durung tepat. Nanti pasti bisa.","Ora popo, {n}. Sinau iku pelan-pelan."],["Sugeng rawuh malih, {n}!","Wah, {n} bali maneh! Ayo sinau.","Mbah wis nunggu lho, {n}."]],
+ing:[["Great job, {n}! Betul banget!","Yay! That's right!","Awesome! Kamu keren, {n}!","Perfect! Yuk lanjut!","Wow, super! Correct!"],["Oops! Belum pas, {n}. Next time ya!","Almost! Dikit lagi kok.","Hmm, not quite. Don't worry!","Oh no, belum tepat. It's okay, keep going!","Nice try, {n}! Yuk lihat jawabannya."],["Hi again, {n}! Ready to play?","Welcome back, {n}! Let's go!","Hello, {n}! Zippy kangen nih!"]],
+ind:[["Betul, {n}! Kata-katamu rapi sekali.","Wah, tepat! Bu Kata senang deh.","Nah, benar! Kamu teliti membaca.","Bagus, {n}! Pertahankan ya.","Pas sekali! Seperti penulis cilik."],["Hmm, belum tepat, {n}. Coba kita baca pelan-pelan.","Hampir, lho! Ada yang kurang sedikit.","Belum pas, tapi nggak apa-apa. Kita lihat bersama.","Ups, ketuker ya? Wajar kok.","Tenang, {n}. Membaca itu butuh latihan."],["Halo lagi, {n}! Ada cerita baru nih.","Eh, {n} balik! Yuk, baca bareng lagi.","Hai, {n}! Bu Kata kangen cerita sama kamu."]],
+mat:[["Tepat, {n}! Hitunganmu rapi!","Yes! Angkanya pas semua!","Wah, cepat banget! Benar!","Betul! Otak kalkulatormu jalan nih.","Jawabanmu klop! Lanjut teka-teki berikutnya?"],["Hmm, angkanya meleset, {n}. Nanti hitung lagi ya!","Hampir! Selisihnya tipis banget.","Belum cocok. Tenang, kita cek langkahnya bareng.","Ups, angkanya kabur! Nggak apa-apa.","Salah hitung itu biasa, {n}. Yuk lanjut!"],["Halo lagi, {n}! Ada teka-teki angka baru.","Nah, {n} balik! Siap tebak-tebakan angka?","Hai {n}! Miko udah siapin tantangan nih."]],
+pan:[["Betul, {n}. Sikapmu baik sekali.","Bagus! Itu contoh yang tepat.","Benar, {n}. Kakak bangga sama kamu.","Pas! Pelan-pelan jadi anak teladan.","Tepat sekali. Terus berbuat baik ya!"],["Belum tepat, {n}. Tidak apa-apa, kita pelajari ya.","Hmm, coba pikirkan lagi pelan-pelan.","Belum pas, tapi kamu sudah berusaha. Itu bagus.","Ups, belum benar. Yuk kita lihat alasannya.","Tenang, {n}. Semua orang belajar dari salah."],["Halo lagi, {n}. Senang ketemu kamu.","Selamat datang lagi, {n}! Yuk ngobrol soal hidup rukun.","Hai, {n}. Garu di sini, siap menemani."]]};
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const greetFor=(s,first)=>({t:first?s.g(U):pick(T[s.id][2]).replace("{n}",U),l:s.id==="ing"?"en-US":"id-ID"});
+
+/* ===== TOKO: kostum, aksesori, roket ===== */
+const SLOTS=[["helm","Helm"],["suit","Baju"],["pack","Punggung"],["boots","Sepatu"],["hat","Topi"],["face","Kacamata"],["neck","Leher"],["badge","Lencana"],["buddy","Teman"],["set","Set"],["rocket","Roket"]];
+/* [id, slot, nama, harga, warna, (set: isi)] — harga 0 = gratis/bawaan */
+const IT=[["h0","helm","Helm Putih",0,"#fff"],["h1","helm","Helm Kuning",30,"#ffd23f"],["h2","helm","Helm Ungu",40,"#a78bfa"],["h3","helm","Helm Hijau",40,"#34d399"],
+["s0","suit","Baju Putih",0,"#fff"],["s1","suit","Baju Biru",30,"#60a5fa"],["s2","suit","Baju Merah",40,"#f87171"],["s3","suit","Baju Hijau",40,"#34d399"],["s4","suit","Baju Emas Bintang",80,"#fbbf24"],
+["p0","pack","Tabung Oksigen",0],["p1","pack","Jetpack Api",60],["p2","pack","Jetpack Pelangi",90],["p3","pack","Sayap Bintang",70],["p4","pack","Tas Petualang",30],
+["b0","boots","Sepatu Abu",0,"#cbd5e1"],["b1","boots","Sepatu Neon",40,"#22d3ee"],["b2","boots","Sepatu Emas",60,"#fbbf24"],
+["t0","hat","Tanpa topi",0],["t1","hat","Antena Lucu",20],["t2","hat","Mahkota",50],["t3","hat","Topi Bintang",30],
+["f0","face","Tanpa kacamata",0],["f1","face","Kacamata Bulat",20],["f2","face","Kacamata Bintang",35],
+["n0","neck","Tanpa syal",0],["n1","neck","Syal Merah",25],["n2","neck","Jubah Ungu",45],
+["g0","badge","Tanpa lencana",0],["g1","badge","Lencana Bintang",15],["g2","badge","Lencana Hati",15],
+["y0","buddy","Tanpa teman",0],["y1","buddy","Robot Mini",60],["y2","buddy","Alien Mini",60],
+["k1","set","Set Pangeran Galaksi",150,"",{suit:"s4",hat:"t2",neck:"n2",helm:"h1"}],["k2","set","Set Pilot Api",150,"",{suit:"s2",pack:"p1",boots:"b1",helm:"h1"}],
+["r0","rocket","Roket Biru",0,"#3b82f6"],["r1","rocket","Roket Merah",40,"#ef4444"],["r2","rocket","Roket Hijau",40,"#22c55e"],["r3","rocket","Roket Emas",90,"#f59e0b"],["r4","rocket","Roket Ungu",120,"#8b5cf6"]];
+const DEF={helm:"h0",suit:"s0",pack:"p0",boots:"b0",hat:"t0",face:"f0",neck:"n0",badge:"g0",buddy:"y0",rocket:"r0"};
+const IM=Object.fromEntries(IT.map(i=>[i[0],i]));
+const ensure=()=>{D.inv=D.inv||[];D.eq=Object.assign({},DEF,D.eq)};
+const owned=id=>IM[id][3]===0||(D.inv||[]).includes(id);
+const eq=()=>Object.assign({},DEF,D&&D.eq);
+function wear(id){const i=IM[id];ensure();D.eq=Object.assign({},DEF,D.eq,i[1]==="set"?i[5]:{[i[1]]:id});save()}
+function rocket(c){return`<svg viewBox="0 0 60 110" role="img" aria-label="Roket"><path d="M30 4C46 24 46 60 42 84H18C14 60 14 24 30 4z" fill="#fff" stroke="#cbd5e1"/><path d="M30 4C38 14 41 26 42 38H18C19 26 22 14 30 4z" fill="${c}"/><circle cx="30" cy="54" r="8" fill="#9bd8ff" stroke="${c}" stroke-width="3"/><path d="M18 62L6 88L18 82zM42 62L54 88L42 82z" fill="${c}"/><path d="M24 86L30 108L36 86z" fill="#fb923c"/></svg>`}
+function astro(e){const g=IM,h=g[e.helm][4],su=g[e.suit][4],bo=g[e.boots][4];
+ const pk={p0:'<rect x="22" y="84" width="14" height="34" rx="6" fill="#94a3b8"/><rect x="84" y="84" width="14" height="34" rx="6" fill="#94a3b8"/>',
+ p1:'<rect x="22" y="84" width="14" height="34" rx="6" fill="#ef4444"/><rect x="84" y="84" width="14" height="34" rx="6" fill="#ef4444"/><path d="M24 120l5 20 5-20zM86 120l5 20 5-20z" fill="#fb923c"/>',
+ p2:'<rect x="22" y="84" width="14" height="34" rx="6" fill="#a78bfa"/><rect x="84" y="84" width="14" height="34" rx="6" fill="#a78bfa"/><path d="M24 120l5 20 5-20z" fill="#f43f5e"/><path d="M86 120l5 20 5-20z" fill="#22d3ee"/>',
+ p3:'<path d="M34 88C-4 60-6 112 32 114z" fill="#fde68a"/><path d="M86 88C124 60 126 112 88 114z" fill="#fde68a"/>',
+ p4:'<rect x="78" y="86" width="32" height="36" rx="9" fill="#a16207"/><rect x="84" y="94" width="20" height="8" rx="3" fill="#fbbf24"/>'}[e.pack];
+ const cape=e.neck==="n2"?'<path d="M36 84L12 144H108L84 84z" fill="#7c3aed"/>':"";
+ const bud={y1:'<rect x="92" y="114" width="22" height="22" rx="6" fill="#94a3b8"/><circle cx="99" cy="123" r="3" fill="#22d3ee"/><circle cx="108" cy="123" r="3" fill="#22d3ee"/>',y2:'<circle cx="104" cy="126" r="11" fill="#86efac"/><circle cx="100" cy="124" r="2.5" fill="#14224d"/><circle cx="108" cy="124" r="2.5" fill="#14224d"/>'}[e.buddy]||"";
+ const hat={t1:'<path d="M60 12V0" stroke="#fff" stroke-width="3"/><circle cx="60" cy="-2" r="5" fill="#f43f5e"/>',t2:'<path d="M38 20L42 2L52 14L60 -2L68 14L78 2L82 20z" fill="#fbbf24"/>',t3:'<text x="60" y="14" text-anchor="middle" font-size="24">⭐</text>'}[e.hat]||"";
+ const fc={f1:'<g fill="none" stroke="#fff" stroke-width="3"><circle cx="49" cy="50" r="8"/><circle cx="71" cy="50" r="8"/><path d="M57 50h6"/></g>',f2:'<text x="49" y="57" text-anchor="middle" font-size="16">⭐</text><text x="71" y="57" text-anchor="middle" font-size="16">⭐</text>'}[e.face]||"";
+ const nk=e.neck==="n1"?'<rect x="40" y="78" width="40" height="9" rx="4" fill="#ef4444"/><rect x="72" y="84" width="9" height="20" rx="4" fill="#ef4444"/>':e.neck==="n2"?'<circle cx="60" cy="84" r="4" fill="#fbbf24"/>':"";
+ const bg={g1:'<text x="46" y="108" font-size="15">⭐</text>',g2:'<text x="46" y="108" font-size="15">❤️</text>'}[e.badge]||"";
+ return`<svg viewBox="-8 -10 136 160" role="img" aria-label="Astronaut">${pk}${cape}${bud}<rect x="34" y="80" width="52" height="42" rx="18" fill="${su}" stroke="#cbd5e1"/><rect x="38" y="120" width="18" height="14" rx="6" fill="${bo}"/><rect x="64" y="120" width="18" height="14" rx="6" fill="${bo}"/><rect x="52" y="94" width="16" height="10" rx="3" fill="#22d3ee"/>${bg}<circle cx="60" cy="48" r="38" fill="${h}" stroke="#cbd5e1" stroke-width="2"/><ellipse cx="60" cy="50" rx="28" ry="23" fill="#1b3a8f"/><circle cx="50" cy="44" r="5" fill="#9bd8ff"/>${fc}${nk}${hat}</svg>`}
+
+/* ===== TAMPILAN ===== */
+const go=(v,x)=>{stop();V=Object.assign({v},x);if(v==="subj"){const s=sub(V.i);D.vis=D.vis||{};V.gt=greetFor(s,!D.vis[s.id]);D.vis[s.id]=1;save();sfx("enter")}draw();window.scrollTo(0,0);if(v==="subj")setTimeout(()=>say(V.gt.t,V.i,V.gt.l),350)};
+const sub=id=>S.find(s=>s.id===id);
+const pct=s=>{const q=Q.filter(x=>x.s===s.id);return q.length?Math.round(q.filter(x=>D.ans[x.id]).length/q.length*100):0};
+function topBar(back){return`<div class="top">${back?`<button class="btn ghost" data-a="go" data-v="${back}">⬅ Kembali</button>`:`<span></span>`}<span><span class="pts">⭐ ${D?D.pts:0} Stardust</span> <button class="btn ghost" data-a="mute" aria-label="Bisukan">${AU.set.mute?"🔇":"🔊"}</button> <button class="btn ghost" data-a="go" data-v="set" aria-label="Pengaturan suara">⚙️</button></span></div>`}
+function draw(){setArea(areaOf());$("#app").innerHTML=VIEWS[V.v]()}
+const VIEWS={
+intro:()=>`<div class="hero">${AST}<h1 style="font-size:2.3rem">🚀 GALAXY LEARN</h1><p>Petualangan Astronaut Cilik — belajar kelas 4 SD/MI sambil menjelajah planet!</p><button class="btn" data-a="go" data-v="login">Mulai Petualangan</button></div>`,
+login:()=>`<div class="card"><h2>Masuk Pesawat</h2>
+${BACKEND.url?"":`<div class="warn"><b>Backend belum dikonfigurasi.</b> Simpan antarperangkat belum aktif (Tahap 5). Kamu bisa memakai <b>Mode Coba</b>: progres hanya tersimpan di peramban ini dan tidak ikut pindah ke perangkat lain.</div>`}
+<label>Nama pengguna<input id="nm" maxlength="12" autocomplete="username" placeholder="mis. bintang7"></label>
+<label>PIN (4 angka)<input id="pn" type="password" inputmode="numeric" maxlength="4" autocomplete="off"></label>
+<p id="er" style="color:var(--no);min-height:1.4em"></p>
+<button class="btn" data-a="login">Masuk</button> <button class="btn sec" data-a="reg">Buat Akun Baru</button>
+<p style="font-size:.85rem">Jangan pakai nama asli lengkap. Cukup nama panggilan.</p></div>`,
+home:()=>`${topBar()}<div class="hero" style="padding-top:6px"><div style="width:130px;margin:auto">${astro(eq())}</div><h2>Halo, ${esc(U)}! 👋</h2></div>
+<div class="card"><h3>🪐 Peta Planet</h3><div class="grid">${S.map(s=>`<button class="planet" style="background:${s.c}" data-a="go" data-v="subj" data-i="${s.id}"><span class="e">${s.e}</span>${s.n}<div class="bar" style="margin-top:8px"><i style="width:${pct(s)}%"></i></div></button>`).join("")}</div></div>
+<div class="card"><button class="btn" data-a="go" data-v="qg">🌌 Quiz Galaxy</button> <button class="btn" data-a="go" data-v="shop">🛍️ Toko</button> <button class="btn sec" data-a="go" data-v="shop" data-own="1">👕 Lemari</button> <button class="btn sec" data-a="go" data-v="shop" data-own="1" data-tab="rocket">🚀 Roket</button> <button class="btn sec" data-a="go" data-v="book">📖 Buku Perjalanan</button> <button class="btn ghost" style="color:#14224d;background:#e5e7eb" data-a="out">Keluar</button>
+<div class="warn">Segera hadir: toko kostum &amp; roket dan simpan online.</div></div>`,
+subj:()=>{const s=sub(V.i),g=V.gt.t;return`${topBar("home")}<div class="card" style="border-left:12px solid ${s.c}"><h2><span class="av" id="av">${s.e}</span> Planet ${s.n}</h2><p><b>${s.t}:</b> “${esc(g)}”</p>${spk(g,s.id,V.gt.l)}${s.id==="jawa"?`<p style="font-size:.85rem">Catatan: browser umumnya tidak punya suara bahasa Jawa, jadi dibacakan dengan logat Indonesia.</p>`:""}</div>
+${s.ch.map((c,i)=>`<div class="card"><h3>${c.t}</h3>${c.tp.map(t=>`<span class="chip">${t}</span>`).join("")}<p>${D.mat[s.id+i]?"✅ Materi selesai":""}</p><button class="btn" data-a="go" data-v="chap" data-i="${s.id}" data-c="${i}">Belajar</button></div>`).join("")}
+<button class="btn sec" data-a="quiz" data-i="${s.id}" data-c="-1">Quiz Planet ${s.n}</button>`},
+chap:()=>{const s=sub(V.i),c=s.ch[V.c],n=Q.filter(q=>q.s===s.id&&q.c===V.c).length,lang=s.id==="ing"?"en-US":"id-ID",done=D.mat[s.id+V.c];
+return`${topBar("subj")}<div class="card"><h2>${c.t}</h2><p><b>${s.t}</b> menjelaskan:</p><p style="font-size:1.15rem;line-height:1.5">${esc(c.m)}</p>${s.id==="jawa"&&V.c===0?`<p class="jv">ꦲ ꦤ ꦕ ꦫ ꦏ</p><p>ha na ca ra ka</p>`:""}${spk(c.m,s.id,"id-ID")}
+<div class="warn">Materi ringkas ini ditulis ulang dengan kata sendiri dan <b>belum diverifikasi</b> ke buku resmi Kemendikdasmen.</div>
+${done?"":`<button class="btn" data-a="done" data-i="${s.id}" data-c="${V.c}">✅ Aku sudah paham (+10)</button> `}
+${n?`<button class="btn sec" data-a="quiz" data-i="${s.id}" data-c="${V.c}">Latihan Soal (${n})</button>`:""}</div>`},
+qg:()=>`${topBar("home")}<div class="card"><h2>🌌 Quiz Galaxy</h2><p>Pilih mata pelajaran:</p><div class="grid">${S.map(s=>`<button class="planet" style="background:${s.c}" data-a="quiz" data-i="${s.id}" data-c="-1"><span class="e">${s.e}</span>${s.n}</button>`).join("")}</div></div>`,
+quiz:()=>{const q=QS.l[QS.k];if(!q)return`${topBar("home")}<div class="card hero"><h2>🎉 Misi selesai!</h2><p>Kamu mengumpulkan ${QS.got} Stardust di sesi ini.</p><button class="btn" data-a="go" data-v="home">Kembali ke Peta</button></div>`;
+ const A=D.ans[q.id],ord=QS.ord[q.id]||(QS.ord[q.id]=q.o.map((_,i)=>i).sort(()=>Math.random()-.5));
+ return`${topBar("home")}<div class="card"><p>Soal ${QS.k+1} dari ${QS.l.length}</p><h2>${esc(q.q)}</h2>
+${ord.map(i=>`<button class="btn opt ${A?(i===q.a?"good":i===A.pick?"bad":""):""}" ${A?"disabled":""} data-a="ans" data-i="${i}">${esc(q.o[i])}</button>`).join("")}
+${A?`<div class="fb ${A.ok?"ok":"no"}"><span class="av" id="av" style="font-size:1.6rem">${sub(q.s).e}</span> <b>${esc(QS.fb[q.id]||(A.ok?"Betul!":"Belum tepat."))}</b><br>${A.ok?"":`Jawaban yang benar: <b>${esc(q.o[q.a])}</b>.<br>`}${esc(q.e)}${A.ok?"":"<br>Nggak apa-apa, kamu sudah belajar hal baru!"}<br>+${A.ok?10:3} Stardust</div><br><button class="btn" data-a="next">Lanjut ➡</button>`:""}</div>`},
+shop:()=>{ensure();const E=eq(),pv=Object.assign({},E,V.pv||{}),tab=V.tab||"helm",items=IT.filter(i=>i[1]===tab&&(!V.own||owned(i[0])));
+return`${topBar("home")}<div class="card"><h2>${V.own?"👕 Lemari & Koleksi":"🛍️ Toko Kostum & Roket"}</h2><div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap"><div style="width:120px">${astro(pv)}</div><div style="width:50px">${rocket(IM[pv.rocket][4])}</div><div><p>Stardust: <b>⭐ ${D.pts}</b></p>${V.msg?`<p style="color:#b45309"><b>${esc(V.msg)}</b></p>`:"<p>Tekan 👁️ Lihat untuk mencoba barang.</p>"}</div></div>
+<label style="font-size:.9rem"><input type="checkbox" data-a="own" ${V.own?"checked":""} style="width:auto"> Hanya milikku</label></div>
+<div class="tabs">${SLOTS.map(([k,l])=>`<button class="btn ${k===tab?"":"sec"}" data-a="tab" data-i="${k}">${l}</button>`).join("")}</div>
+<div class="grid">${items.map(i=>{const id=i[0],ow=owned(id),on=E[i[1]]===id&&i[1]!=="set",pr=i[1]==="rocket"?rocket(i[4]):astro(i[1]==="set"?Object.assign({},DEF,E,i[5]):Object.assign({},E,{[i[1]]:id}));return`<div class="card" style="text-align:center;margin:0"><div style="width:70px;margin:auto">${pr}</div><b>${i[2]}</b><br>${i[3]?`⭐ ${i[3]}`:"Gratis"}<br><button class="btn ghost" style="color:#14224d;background:#e5e7eb;min-height:36px" data-a="pv" data-id="${id}">👁️ Lihat</button><br>${ow?`<button class="btn sec" data-a="wear" data-id="${id}" ${on?"disabled":""}>${on?"Dipakai ✓":"Pakai"}</button>`:`<button class="btn" data-a="buy" data-id="${id}">Beli</button>`}</div>`}).join("")}</div>`},
+set:()=>`${topBar("home")}<div class="card"><h2>🔊 Pengaturan Suara</h2>${[["m","🎵 Musik latar"],["s","🔔 Efek suara"],["t","🗣️ Suara guru"],["v","🔈 Volume utama"]].map(([k,l])=>`<label>${l}<input type="range" min="0" max="1" step=".05" value="${AU.set[k]}" data-s="${k}"></label>`).join("")}<label><input type="checkbox" data-s="mute" ${AU.set.mute?"checked":""} style="width:auto"> 🔇 Bisukan semua</label><p><button class="btn sec" data-a="test">Tes suara</button></p>
+<h3>🎙️ Suara tiap guru</h3><p style="font-size:.9rem">Pilihan suara tergantung perangkatmu. Kalau daftarnya kosong, perangkat hanya punya satu suara dan kamu bisa mengubah nada dan kecepatannya saja.</p>
+${S.map(s=>{const o=(AU.set.vp||{})[s.id]||{},dv=VP[s.id],vs=TTS?speechSynthesis.getVoices().filter(v=>/^(id|en|jv|ms)/i.test(v.lang)):[];return`<div class="card" style="background:#f1f5f9"><b>${s.e} ${s.t}</b>
+<label>Suara<select data-vp="${s.id}.v"><option value="">Otomatis</option>${vs.map(v=>`<option value="${esc(v.name)}" ${o.v===v.name?"selected":""}>${esc(v.name)} (${v.lang})</option>`).join("")}</select></label>
+<label>Nada<input type="range" min=".5" max="2" step=".05" value="${o.p!=null?o.p:dv[0]}" data-vp="${s.id}.p"></label>
+<label>Kecepatan<input type="range" min=".6" max="1.3" step=".02" value="${o.r!=null?o.r:dv[1]}" data-vp="${s.id}.r"></label>
+<button class="btn sec" data-a="tv" data-i="${s.id}">Tes suara ${s.t}</button></div>`}).join("")}
+<button class="btn ghost" style="color:#14224d;background:#e5e7eb" data-a="vreset">Kembalikan suara awal</button>${TTS?"":`<div class="warn">Perangkat ini tidak punya suara guru. Teks tetap bisa dibaca.</div>`}</div>`,
+book:()=>{return`${topBar("home")}<div class="card"><div style="width:90px">${astro(eq())}</div><h2>📖 Buku Perjalanan ${esc(U)}</h2>${S.map(s=>`<p>${s.e} ${s.n}<div class="bar"><i style="width:${pct(s)}%"></i></div></p>`).join("")}
+<h3>Riwayat poin</h3>${D.log.slice(-8).reverse().map(l=>`<div>⭐ ${l[1]>0?"+":""}${l[1]} — ${esc(l[0])}</div>`).join("")||"<p>Belum ada. Ayo mulai belajar!</p>"}</div>`}
+};
+
+/* ===== AKSI ===== */
+document.addEventListener("click",async e=>{
+ const b=e.target.closest("[data-a]");if(!b)return;const d=b.dataset;if(!AU.on){au();startMusic()}sfx("click");
+ if(d.a==="go")return go(d.v,{i:d.i,c:d.c===undefined?undefined:+d.c,own:!!d.own,tab:d.tab});
+ if(d.a==="say")return say(d.t,d.sid,d.l);if(d.a==="stop")return stop();
+ if(d.a==="tab"){V.tab=d.i;V.pv=null;V.msg="";return draw()}
+ if(d.a==="own"){V.own=!V.own;return draw()}
+ if(d.a==="pv"){const i=IM[d.id];V.pv=i[1]==="set"?i[5]:{[i[1]]:d.id};V.msg="";return draw()}
+ if(d.a==="wear"){wear(d.id);V.pv=null;return draw()}
+ if(d.a==="buy"){const i=IM[d.id];ensure();if(owned(d.id))return;if(D.pts<i[3]){V.msg="Stardust belum cukup. Kurang "+(i[3]-D.pts)+" lagi, ayo kumpulkan dari soal!";sfx("no");return draw()}if(!confirm("Beli "+i[2]+" seharga "+i[3]+" Stardust?"))return;award(-i[3],"Beli "+i[2]);D.inv.push(d.id);wear(d.id);V.pv=null;V.msg="Yeay! "+i[2]+" jadi milikmu!";sfx("reward");return draw()}
+ if(d.a==="tv"){return say("Halo "+U+"! Ini suara "+sub(d.i).t+". Gimana, cocok nggak?",d.i,d.i==="ing"?"en-US":"id-ID")}
+ if(d.a==="vreset"){AU.set.vp={};persistAu();return draw()}if(d.a==="mute"){AU.set.mute=!AU.set.mute;if(AU.set.mute)stop();applyAu();persistAu();return draw()}if(d.a==="test"){say("Halo! Ini suara guru. Kalau kamu dengar aku, berarti suaranya sudah jalan!",V.i||"mat","id-ID");return sfx("ok")}
+ if(d.a==="login"||d.a==="reg"){const er=await auth($("#nm").value,$("#pn").value,d.a==="reg");if(er){$("#er").textContent=er;return}if(D.audio)Object.assign(AU.set,D.audio);ensure();applyAu();return go("home")}
+ if(d.a==="out"){U=D=null;return go("intro")}
+ if(d.a==="done"){const k=d.i+d.c;if(!D.mat[k]){D.mat[k]=1;award(10,"Selesai materi");sfx("reward")}return go("chap",{i:d.i,c:+d.c})}
+ if(d.a==="quiz"){const c=+d.c,l=Q.filter(q=>q.s===d.i&&(c<0||q.c===c));QS={l,k:0,ord:{},got:0,fb:{}};return go("quiz")}
+ if(d.a==="ans"){const q=QS.l[QS.k];if(D.ans[q.id])return;const ok=+d.i===q.a;D.ans[q.id]={ok,pick:+d.i};const p=ok?10:3;QS.got+=p;award(p,ok?"Jawaban benar":"Jawaban salah");const ln=pick(T[q.s][ok?0:1]).replace("{n}",U);QS.fb[q.id]=ln;sfx(ok?"ok":"no");draw();return say(ln,q.s,"id-ID")}
+ if(d.a==="next"){stop();QS.k++;if(!QS.l[QS.k])sfx("win");return draw()}
+});
+document.addEventListener("input",e=>{const vp=e.target.dataset&&e.target.dataset.vp;if(vp){const[sid,fl]=vp.split(".");AU.set.vp=AU.set.vp||{};AU.set.vp[sid]=AU.set.vp[sid]||{};if(fl==="v"){if(e.target.value)AU.set.vp[sid].v=e.target.value;else delete AU.set.vp[sid].v}else AU.set.vp[sid][fl]=+e.target.value;persistAu();return}const k=e.target.dataset&&e.target.dataset.s;if(!k)return;AU.set[k]=k==="mute"?e.target.checked:+e.target.value;applyAu();persistAu()});
+if(TTS)speechSynthesis.onvoiceschanged=()=>{if(V.v==="set")draw()};
+draw();
+</script>
+</body>
+</html>
